@@ -20,7 +20,7 @@ public class Console {
 
 
     public static void println(String message) {
-        println(message);
+        IO.println(message);
     }
 
     /**
@@ -55,7 +55,7 @@ public class Console {
                 sb.append(c);
             }
         }
-        println(sb.toString());
+        IO.println(sb.toString());
     }
 
     /**
