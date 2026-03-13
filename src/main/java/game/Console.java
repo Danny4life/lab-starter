@@ -1,139 +1,132 @@
 package game;
 
+import com.diogonunes.jcolor.AnsiFormat;
 import game.player.*;
 
 import java.text.ParseException;
 import java.util.Scanner;
 
+import static com.diogonunes.jcolor.Ansi.colorize;
+import static com.diogonunes.jcolor.Attribute.*;
+
+/**
+ * Helper methods for doing console-based user interaction
+ */
 public class Console {
 
-    private static final Scanner scanner = new Scanner(System.in);
+    // Define some colors and text styles for use in the console
+    private static final AnsiFormat fPrompt = new AnsiFormat(GREEN_TEXT(), BOLD());
+    private static final AnsiFormat fAlert = new AnsiFormat(YELLOW_TEXT());
 
-    /**
-     * Print a line of text
-     */
-    public static void println(String text) {
-        System.out.println(text);
+
+    public static void println(String message) {
+        println(message);
     }
 
     /**
-     * Print an alert message
+     * Prompt the user for input using the given promptMessage
+     * @param promptMessage The message to prompt the user with
+     * @return The user's response
      */
-    public static void printAlert(String text) {
-        System.out.println("⚠ " + text);
+    public static String prompt(String promptMessage) {
+        return IO.readln(fPrompt.format(promptMessage));
     }
 
     /**
-     * Prompt the user for an integer
+     * Display an alert message to the user
+     * @param message The message to display
      */
-    public static int promptForInt(String prompt) {
+    public static void printAlert(String message) {
+        println(fAlert.format(message));
+    }
+
+    /**
+     * Format the given game board for color display in an ANSI terminal
+     * @param board A tictactoe game board
+     */
+    public static void showBoard(Board board) {
+        var sb = new StringBuilder();
+        for (var c : board.toString().toCharArray()) {
+            if ( c == 'X' ) {
+                sb.append(colorize("X", BRIGHT_CYAN_TEXT()));
+            } else if ( c == 'O' ) {
+                sb.append(colorize("O", BRIGHT_MAGENTA_TEXT()));
+            } else {
+                sb.append(c);
+            }
+        }
+        println(sb.toString());
+    }
+
+    /**
+     * Repeatedly prompt the user to select a player for the given token
+     * until the select a valid one of a set of valid players
+     * @param whichPlayer The player for which to prompt
+     * @return A player object representing the user's chosen player
+     */
+    public static Player promptForPlayer(Token whichPlayer) {
+
+        var helpMessage =
+                "To make a computer player, use '@<name>' where <name> is Linus, Omola, or Randy.";
 
         while (true) {
-            System.out.print(prompt);
 
-            try {
-                return Integer.parseInt(scanner.nextLine().trim());
-            } catch (Exception e) {
-                printAlert("Please enter a valid number.");
+            var input = prompt("Who will play " + whichPlayer + "? ");
+
+            if (input.startsWith("@")) {
+
+                input = input.substring(1).toLowerCase();
+
+                switch (input) {
+
+                    case "randy":
+                        return new RandyPlayer(whichPlayer);
+
+                    case "linus":
+                        return new LinusPlayer(whichPlayer);
+
+                    case "omola":
+                        return new OmolaPlayer(whichPlayer);
+
+                    default:
+                        printAlert(helpMessage);
+                }
+
+            } else {
+                return new HumanPlayer(input, whichPlayer);
             }
         }
     }
 
+
     /**
-     * Prompt user to enter a board position
+     * Repeatedly prompt the user for a position on which to place their next token.
+     * If they enter an invalid response or an already-taken position they are re-prompted.
+     * @param prompt The prompt to display to the user
+     * @param board The current state of the game board
+     * @return The position selected by the user
      */
     public static Position promptForPosition(String prompt, Board board) {
 
-        while (true) {
+        final String helpMessage = "Input must be in the format 'row column', e.g., '1 2' or 't m' for the top middle cell.";
 
-            System.out.print(prompt);
+        while ( true ) {
+            var input = IO.readln(fPrompt.format(prompt)).trim();
 
-            String input = scanner.nextLine();
-
+            // The .parse method may throw if the user entered invalid location text, so we try/catch
             try {
-                return Position.parse(input);
-            } catch (ParseException e) {
-                printAlert("Invalid position format. Try again.");
-            }
-        }
-    }
 
-    /**
-     * Ask user which type of player to create
-     */
-    public static Player promptForPlayer(Token token) {
+                var pos = Position.parse(input);
 
-        println("Choose player type for " + token + ":");
-        println("1 - Human");
-        println("2 - Randy (Random AI)");
-        println("3 - Linus (Sequential AI)");
-        println("4 - Omola (Look-ahead AI)");
-
-        int choice = promptForInt("Enter choice: ");
-
-        return switch (choice) {
-            case 2 -> new RandyPlayer(token);
-            case 3 -> new LinusPlayer(token);
-            case 4 -> new OmolaPlayer(token);
-            default -> {
-                System.out.print("Enter player name: ");
-                String name = scanner.nextLine();
-                yield new HumanPlayer(name, token);
-            }
-        };
-    }
-
-    /**
-     * Display the board
-     */
-    public static void showBoard(Board board) {
-
-        println("\nCurrent Board:");
-
-        println("   1 2 3");
-
-        String[] rowNames = {"T", "M", "B"};
-
-        for (int i = 0; i < 3; i++) {
-
-            System.out.print(rowNames[i] + "  ");
-
-            for (int j = 0; j < 3; j++) {
-
-                Position pos = new Position(Row.values()[i], Col.values()[j]);
-
-                if (board.isEmptyAt(pos)) {
-                    System.out.print(". ");
-                } else {
-                    Token token = board.getWinner().orElse(null);
-
-                    Token[][] internal = getBoardState(board);
-
-                    if (internal[i][j] == null)
-                        System.out.print(". ");
-                    else
-                        System.out.print(internal[i][j] + " ");
+                if (! board.isEmptyAt(pos)) {
+                    printAlert("That position is already taken.");
+                    continue;
                 }
+
+                return pos;
+            } catch ( ParseException e ) {
+                printAlert(helpMessage);
             }
-
-            System.out.println();
-        }
-
-        println("");
-    }
-
-    /**
-     * Helper method to access board state through reflection
-     * (since board array is private)
-     */
-    private static Token[][] getBoardState(Board board) {
-
-        try {
-            var field = Board.class.getDeclaredField("board");
-            field.setAccessible(true);
-            return (Token[][]) field.get(board);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 }

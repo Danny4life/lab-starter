@@ -6,17 +6,17 @@ import game.Token;
 import java.util.List;
 
 public class OmolaPlayer extends Player {
-    public OmolaPlayer(Token token) {
+    public OmolaPlayer(Token token){
         super("Omola", token);
     }
 
     @Override
-    public Position getNextMove(Board board) {
+    public Position getNextMove(Board board){
 
-        List<Position> empty = board.getEmptyCells();
+        var empty = board.getEmptyCells();
 
-        // 1️⃣ check for winning move
-        for (Position pos : empty) {
+        // check winning move
+        for (var pos : empty) {
 
             Board copy = new Board(board);
             copy.place(pos, token);
@@ -26,10 +26,10 @@ public class OmolaPlayer extends Player {
             }
         }
 
-        // 2️⃣ block opponent
+        // block opponent
         Token opponent = token == Token.X ? Token.O : Token.X;
 
-        for (Position pos : empty) {
+        for (var pos : empty) {
 
             Board copy = new Board(board);
             copy.place(pos, opponent);
@@ -39,7 +39,6 @@ public class OmolaPlayer extends Player {
             }
         }
 
-        // 3️⃣ otherwise pick first
         return empty.get(0);
     }
 }

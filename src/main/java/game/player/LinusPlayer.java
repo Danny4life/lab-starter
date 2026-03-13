@@ -6,14 +6,14 @@ import game.Token;
 import java.util.List;
 
 public class LinusPlayer extends Player {
-    public LinusPlayer(Token token) {
+    public LinusPlayer(Token token){
         super("Linus", token);
     }
 
     @Override
-    public Position getNextMove(Board board) {
+    public Position getNextMove(Board board){
 
-        List<Position> emptyCells = board.getEmptyCells();
+        var emptyCells = board.getEmptyCells();
 
         return emptyCells.get(0);
     }

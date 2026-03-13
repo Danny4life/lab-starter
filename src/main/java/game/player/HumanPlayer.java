@@ -7,7 +7,7 @@ import game.Token;
 
 
 public class HumanPlayer extends Player {
-    public HumanPlayer(String name, Token token) {
+    public HumanPlayer(String name, Token token){
         super(name, token);
     }
 
@@ -15,6 +15,7 @@ public class HumanPlayer extends Player {
     public Position getNextMove(Board board) {
 
         while (true) {
+
             var prompt = "%s's turn (%s). Enter your move (row column): "
                     .formatted(this.name(), this.token());
 
@@ -24,7 +25,7 @@ public class HumanPlayer extends Player {
                 return pos;
             }
 
-            Console.printAlert("That position is not valid. Please enter a valid position.");
+            Console.printAlert("That position is not valid.");
         }
     }
 }
