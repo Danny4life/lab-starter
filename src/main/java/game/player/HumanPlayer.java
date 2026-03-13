@@ -1,0 +1,30 @@
+package game.player;
+
+import game.Board;
+import game.Console;
+import game.Token;
+
+
+
+public class HumanPlayer extends Player {
+    public HumanPlayer(String name, Token token) {
+        super(name, token);
+    }
+
+    @Override
+    public Position getNextMove(Board board) {
+
+        while (true) {
+            var prompt = "%s's turn (%s). Enter your move (row column): "
+                    .formatted(this.name(), this.token());
+
+            var pos = Console.promptForPosition(prompt, board);
+
+            if (board.isEmptyAt(pos)) {
+                return pos;
+            }
+
+            Console.printAlert("That position is not valid. Please enter a valid position.");
+        }
+    }
+}
